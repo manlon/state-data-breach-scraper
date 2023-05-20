@@ -31,6 +31,7 @@
   "dependencies": {
     "@sparticuz/chromium": "106.0.2",
     "lowdb": "^6.0.0",
+    "pdf-table-extractor": "^1.0.3",
     "puppeteer-core": "17.1.0"
   },
   "devDependencies": {
