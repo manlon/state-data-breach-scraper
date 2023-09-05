@@ -101,8 +101,7 @@ export const handler = async () => {
             secondDate.toLocaleDateString(),
           ]
         }
-      } else
-      if (new Date(breachDates).toString() !== 'Invalid Date') {
+      } else if (new Date(breachDates).toString() !== 'Invalid Date') {
         breachDates = new Date(breachDates).toLocaleDateString()
       }
       const dataAccessed = await page.evaluate(
@@ -201,8 +200,7 @@ export const handler = async () => {
                     secondDate.toLocaleDateString(),
                   ]
                 }
-              } else
-              if (new Date(breachDates).toString() !== "Invalid Date") {
+              } else if (new Date(breachDates).toString() !== 'Invalid Date') {
                 breachDates = new Date(breachDates).toLocaleDateString()
               }
             }

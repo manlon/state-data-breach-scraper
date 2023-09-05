@@ -18,6 +18,7 @@ const states = [
   'washington',
   'wisconsin',
   'hipaa',
+  // massachusetts: see below
 ]
 
 export const handler = async () => {
@@ -53,13 +54,57 @@ export const handler = async () => {
           return true
         })
     })
+    // MA is a little more complicated:
+    let command = new InvokeCommand({
+      FunctionName: 'mass-links',
+      InvocationType: 'RequestResponse',
+      LogType: 'Tail',
+      Payload: '{}',
+    })
+    const links = await lambdaClient
+      .send(command)
+      .then((result) => Buffer.from(result.Payload))
+      .then(JSON.parse)
+
+    const chunkSize = 3
+    const chunks = []
+    for (let i = 0; i < links.length; i += chunkSize) {
+      const chunk = links.slice(i, i + chunkSize)
+      command = new InvokeCommand({
+        FunctionName: 'massachusetts',
+        InvocationType: 'RequestResponse',
+        LogType: 'Tail',
+        Payload: JSON.stringify(chunk),
+      })
+      tasks.push(
+        lambdaClient
+          .send(command)
+          .then((res) => Buffer.from(res.Payload))
+          .then(JSON.parse)
+          .then((res) => {
+            console.log(res)
+            Array.prototype.push.apply(db.data.breaches, res)
+            return true
+          })
+      )
+    }
     await Promise.all(tasks)
+
     const putCommand = new PutObjectCommand({
       Bucket: 'ksj-lambda-zips',
       Key: `database/${dbFilename}`,
       Body: JSON.stringify(db.data, null, 2),
     })
     await s3Client.send(putCommand)
+
+    const sqliteCommand = new InvokeCommand({
+      FunctionName: 'convert-to-sqlite',
+      InvocationType: 'RequestResponse',
+      LogType: 'Tail',
+      Payload: JSON.stringify({ filename: dayString }),
+    })
+    await lambdaClient.send(sqliteCommand)
+
     const ebClient = new ElasticBeanstalkClient({ region: 'us-east-1' })
     const restartCommand = new RestartAppServerCommand({
       EnvironmentId: 'e-36hmfpi937',
