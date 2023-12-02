@@ -40,10 +40,11 @@ export const handler = async () => {
         (el) => el.textContent.trim(),
         entity
       )
-      const reportedDate = await page.evaluate(
+      let reportedDate = await page.evaluate(
         (el) => el.textContent.trim(),
         reported
       )
+      reportedDate = reportedDate.replace(/[\u200B-\u200D\uFEFF]/g, ' ').trim()
       let breachDates = await page.evaluate(
         (el) => el.textContent.trim(),
         dates
